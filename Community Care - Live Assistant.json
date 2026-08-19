@@ -1,0 +1,252 @@
+{
+  "name": "Community Care - Live Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "community-search",
+        "options": {}
+      },
+      "id": "9ed488ae-95ea-4a8a-a344-1050bce72036",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -96
+      ],
+      "webhookId": "1edb35c6-0123-4333-9abe-37124d8fbf09"
+    },
+    {
+      "parameters": {
+        "url": "YOUR_PUBLIC_GOOGLE_SHEETS_CSV_OR_JSON_URL",
+        "options": {}
+      },
+      "id": "78267483-202c-40ab-a47e-0498e6fe88f3",
+      "name": "Fetch Google Sheet Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        16,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract incoming user query and match with database\nconst userQuery = ($input.first().json.body?.query || $input.first().json.query || \"\").toLowerCase();\nconst services = $('Fetch Google Sheet Data').all().map(item => item.json);\n\nconst keywords = [\"hunger\", \"food\", \"rent\", \"medicine\", \"job\", \"shelter\", \"mental health\"];\nconst detectedKeywords = keywords.filter(k => userQuery.includes(k));\n\nconst matchedServices = services.filter(service => {\n  const fullText = JSON.stringify(service).toLowerCase();\n  return detectedKeywords.some(k => fullText.includes(k)) || fullText.includes(userQuery);\n});\n\nreturn [{\n  json: {\n    userQuery: userQuery,\n    detectedKeywords: detectedKeywords,\n    matchedServices: matchedServices.slice(0, 3)\n  }\n}];"
+      },
+      "id": "8605520d-47a5-4cd8-b8c2-643880ad2126",
+      "name": "Filter Services & Detect Keywords",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ejochat.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_EJOCHAT_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"ejochat-default\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are 'CommunityCare AI' – a compassionate, clear, and practical assistant for citizens seeking health and social services in Rwanda. Your tone is warm, respectful, and solution-oriented. Always provide actionable next steps using ONLY the matched local services. If emotional distress is detected, provide immediate human helpline numbers.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"User Query: \" + JSON.stringify($json.userQuery) + \"\\nMatched Services: \" + JSON.stringify($json.matchedServices)\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c60cccec-a978-4014-a9f8-ad8d3b587948",
+      "name": "EjoChat API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        464,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"response\": $json.choices[0].message.content\n}",
+        "options": {}
+      },
+      "id": "3ae3a703-0745-4d40-bc12-232fb105ebc0",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node: Aggregates logs and detects spikes in crisis queries\nconst items = $input.all();\nconst logEntries = items.map(item => (item.json.query || \"\").toLowerCase());\n\nconst trackedKeywords = [\"hunger\", \"food\", \"rent\", \"medicine\", \"job\", \"shelter\", \"mental health\"];\nconst keywordStats = {};\n\ntrackedKeywords.forEach(k => {\n  keywordStats[k] = logEntries.filter(query => query.includes(k)).length;\n});\n\n// Identify any keywords exceeding threshold of 5 searches/day\nconst activeAlerts = Object.entries(keywordStats)\n  .filter(([keyword, count]) => count >= 5)\n  .map(([keyword, count]) => ({ keyword, count }));\n\nreturn [{\n  json: {\n    date: new Date().toISOString().split('T')[0],\n    totalQueries: logEntries.length,\n    triggerAlert: activeAlerts.length > 0,\n    activeAlerts: activeAlerts,\n    keywordBreakdown: keywordStats\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        80
+      ],
+      "id": "6f0eda27-2478-4472-b6ec-ebb6f6c2b729",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        634.7561170212765,
+        62.47319793196972
+      ],
+      "id": "a4853f65-9990-44dd-8815-d4080a295b45",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1fXDcfKUMA1-tLMBkW9NoHzqnFUWAnkrJPO-3duvgA9I",
+          "mode": "list",
+          "cachedResultName": "Untitled spreadsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXDcfKUMA1-tLMBkW9NoHzqnFUWAnkrJPO-3duvgA9I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXDcfKUMA1-tLMBkW9NoHzqnFUWAnkrJPO-3duvgA9I/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        64
+      ],
+      "id": "1b3cf781-19b7-459e-977d-a23be221c816",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "225pmzkb6j1N4YE9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node: Aggregates logs and detects spikes in crisis queries\nconst items = $input.all();\nconst logEntries = items.map(item => Object.values(item.json).join(\" \").toLowerCase());\n\nconst trackedKeywords = [\"hunger\", \"food\", \"rent\", \"medicine\", \"job\", \"shelter\", \"mental health\"];\nconst keywordStats = {};\n\ntrackedKeywords.forEach(k => {\n  keywordStats[k] = logEntries.filter(query => query.includes(k)).length;\n});\n\n// Identify any keywords exceeding threshold\nconst activeAlerts = Object.entries(keywordStats)\n  .filter(([keyword, count]) => count >= 1)\n  .map(([keyword, count]) => ({ keyword, count }));\n\nreturn [{\n  json: {\n    date: new Date().toISOString().split('T')[0],\n    totalQueries: logEntries.length,\n    triggerAlert: activeAlerts.length > 0,\n    activeAlerts: activeAlerts,\n    keywordBreakdown: keywordStats\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        80
+      ],
+      "id": "d7ba690f-bfff-48f5-b8b0-5904ba0ff796",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Google Sheet Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Google Sheet Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Services & Detect Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Services & Detect Keywords": {
+      "main": [
+        [
+          {
+            "node": "EjoChat API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EjoChat API Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c69410b5-e9eb-4e54-aebc-ffb9aa1003f2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dab061124a6f5bb27633783789ba9a4c0bb85b5bcb27bda007132cad1260cf47"
+  },
+  "nodeGroups": [],
+  "id": "Jyeq918BwwrzKeRe",
+  "tags": []
+}
