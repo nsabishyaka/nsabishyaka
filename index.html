@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>TEST 12345</title>
+    <title>CommunityCare AI - Health & Civic Hub</title>
+
     <style>
         :root {
             --primary: #10b981;
@@ -22,10 +23,9 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
         }
 
         header {
@@ -48,17 +48,21 @@
 
         .container {
             max-width: 800px;
+            width: 100%;
             margin: 2rem auto;
             padding: 0 1rem;
             flex: 1;
-            width: 100%;
+        }
+
+        .search-card,
+        .results-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .search-card {
-            background: var(--card-bg);
             padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
         }
 
@@ -92,7 +96,7 @@
             transition: background 0.2s;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: var(--primary-dark);
         }
 
@@ -116,7 +120,6 @@
             font-size: 0.85rem;
             cursor: pointer;
             font-weight: 500;
-            transition: background 0.2s;
         }
 
         .tag:hover {
@@ -124,14 +127,11 @@
         }
 
         .results-card {
-            background: var(--card-bg);
             padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             min-height: 120px;
-            white-space: pre-line;
             line-height: 1.6;
             overflow-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         .loading {
@@ -141,6 +141,20 @@
 
         .error {
             color: #dc2626;
+        }
+
+        .success {
+            color: #1f2937;
+        }
+
+        .debug {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #6b7280;
+            display: none;
         }
 
         footer {
@@ -175,98 +189,93 @@
 
 <body>
 
-    <header>
-        <h1>TEST 12345</h1>
-        <p>Your Civic Engagement & Local Health Assistant</p>
-    </header>
+<header>
+    <h1>CommunityCare AI</h1>
+    <p>Your Civic Engagement & Local Health Assistant</p>
+</header>
 
-    <main class="container">
+<main class="container">
 
-        <div class="search-card">
+    <div class="search-card">
 
-            <label
-                for="userQuery"
-                style="display: block; font-weight: bold; margin-bottom: 0.5rem;"
-            >
-                How can we help you today?
-            </label>
-
-            <div class="input-group">
-
-                <input
-                    type="text"
-                    id="userQuery"
-                    placeholder="e.g., I need food assistance or health centers nearby..."
-                    autocomplete="off"
-                >
-
-                <button
-                    type="button"
-                    id="searchButton"
-                    onclick="searchServices()"
-                >
-                    Search
-                </button>
-
-            </div>
-
-            <div class="quick-tags">
-
-                <span
-                    class="tag"
-                    onclick="quickSearch('Health')"
-                >
-                    🏥 Health
-                </span>
-
-                <span
-                    class="tag"
-                    onclick="quickSearch('Food Aid')"
-                >
-                    🍲 Food Aid
-                </span>
-
-                <span
-                    class="tag"
-                    onclick="quickSearch('Mental Health')"
-                >
-                    🧠 Mental Health
-                </span>
-
-                <span
-                    class="tag"
-                    onclick="quickSearch('Shelter')"
-                >
-                    🏠 Shelter
-                </span>
-
-            </div>
-
-        </div>
-
-        <div
-            class="results-card"
-            id="results"
-            aria-live="polite"
+        <label
+            for="userQuery"
+            style="display:block;font-weight:bold;margin-bottom:0.5rem;"
         >
-            <em>Search results and AI assistance will appear here...</em>
+            How can we help you today?
+        </label>
+
+        <div class="input-group">
+
+            <input
+                type="text"
+                id="userQuery"
+                placeholder="e.g., I need food assistance or health centers nearby..."
+                autocomplete="off"
+            >
+
+            <button
+                type="button"
+                id="searchButton"
+                onclick="searchServices()"
+            >
+                Search
+            </button>
+
         </div>
 
-    </main>
+        <div class="quick-tags">
 
-    <footer>
-        <p>
-            &copy; 2026 CommunityCare AI |
-            Early Warning & Civic Support System
-        </p>
-    </footer>
+            <span class="tag" onclick="quickSearch('Health')">
+                🏥 Health
+            </span>
 
-  <script>
-const WEBHOOK_URL = "https://nsabishyaka.app.n8n.cloud/webhook/community-search";
+            <span class="tag" onclick="quickSearch('Food Aid')">
+                🍲 Food Aid
+            </span>
+
+            <span class="tag" onclick="quickSearch('Mental Health')">
+                🧠 Mental Health
+            </span>
+
+            <span class="tag" onclick="quickSearch('Shelter')">
+                🏠 Shelter
+            </span>
+
+        </div>
+
+    </div>
+
+    <div
+        class="results-card"
+        id="results"
+        aria-live="polite"
+    >
+        <em>Search results and AI assistance will appear here...</em>
+    </div>
+
+    <div id="debug" class="debug"></div>
+
+</main>
+
+<footer>
+    <p>
+        &copy; 2026 CommunityCare AI |
+        Early Warning & Civic Support System
+    </p>
+</footer>
+
+<script>
+
+const WEBHOOK_URL =
+    "https://nsabishyaka.app.n8n.cloud/webhook/community-search";
+
+const REQUEST_TIMEOUT = 60000;
 
 const input = document.getElementById("userQuery");
 const resultsDiv = document.getElementById("results");
 const searchButton = document.getElementById("searchButton");
+const debugDiv = document.getElementById("debug");
 
 function quickSearch(category) {
     input.value = category;
@@ -280,43 +289,201 @@ input.addEventListener("keydown", function(event) {
     }
 });
 
+function setLoading() {
+    resultsDiv.innerHTML =
+        '<span class="loading">Searching CommunityCare AI...</span>';
+}
+
+function setError(message) {
+    resultsDiv.innerHTML =
+        '<div class="error">' +
+        '<strong>Unable to get a response.</strong><br><br>' +
+        escapeHtml(message) +
+        '</div>';
+}
+
+function setDebug(message) {
+    debugDiv.style.display = "block";
+    debugDiv.textContent = message;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function extractResponse(data) {
+
+    if (data === null || data === undefined) {
+        return "";
+    }
+
+    if (typeof data === "string") {
+        return data.trim();
+    }
+
+    if (Array.isArray(data)) {
+
+        if (data.length === 0) {
+            return "";
+        }
+
+        for (const item of data) {
+            const result = extractResponse(item);
+
+            if (result) {
+                return result;
+            }
+        }
+
+        return "";
+    }
+
+    if (typeof data === "object") {
+
+        const possibleFields = [
+            "response",
+            "output",
+            "text",
+            "message",
+            "answer",
+            "content",
+            "result"
+        ];
+
+        for (const field of possibleFields) {
+
+            if (
+                data[field] !== undefined &&
+                data[field] !== null
+            ) {
+
+                const result = extractResponse(data[field]);
+
+                if (result) {
+                    return result;
+                }
+            }
+        }
+
+        if (
+            data.choices &&
+            Array.isArray(data.choices) &&
+            data.choices.length > 0
+        ) {
+
+            const choice = data.choices[0];
+
+            if (choice.message) {
+
+                const result = extractResponse(
+                    choice.message.content
+                );
+
+                if (result) {
+                    return result;
+                }
+            }
+
+            if (choice.text) {
+                return String(choice.text).trim();
+            }
+        }
+
+        if (data.data) {
+            const result = extractResponse(data.data);
+
+            if (result) {
+                return result;
+            }
+        }
+    }
+
+    return "";
+}
+
 async function searchServices() {
+
     const query = input.value.trim();
 
     if (!query) {
+
         resultsDiv.innerHTML =
-            '<span style="color:red;">Please enter a search topic.</span>';
+            '<span class="error">Please enter a search topic.</span>';
+
         return;
     }
 
-    resultsDiv.innerHTML =
-        '<span class="loading">Searching CommunityCare AI...</span>';
+    setLoading();
 
     searchButton.disabled = true;
     searchButton.textContent = "Searching...";
 
+    debugDiv.style.display = "none";
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, REQUEST_TIMEOUT);
+
     try {
+
         const response = await fetch(WEBHOOK_URL, {
+
             method: "POST",
+
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
+
             body: JSON.stringify({
                 query: query
-            })
+            }),
+
+            signal: controller.signal
         });
+
+        clearTimeout(timeout);
 
         const responseText = await response.text();
 
-        console.log("Status:", response.status);
-        console.log("Response:", responseText);
+        console.log("CommunityCare HTTP Status:", response.status);
+        console.log("CommunityCare Response:", responseText);
 
         if (!response.ok) {
+
+            let serverMessage = responseText;
+
+            try {
+
+                const errorData = JSON.parse(responseText);
+
+                serverMessage =
+                    errorData.message ||
+                    errorData.error ||
+                    errorData.response ||
+                    responseText;
+
+            } catch {}
+
             throw new Error(
                 "n8n returned HTTP " +
                 response.status +
-                ": " +
-                responseText
+                ". " +
+                serverMessage
+            );
+        }
+
+        if (!responseText.trim()) {
+
+            throw new Error(
+                "n8n connected successfully, but returned an empty response. Check the Respond to Webhook node in n8n."
             );
         }
 
@@ -328,58 +495,72 @@ async function searchServices() {
             data = responseText;
         }
 
-        if (typeof data === "string") {
-            resultsDiv.innerText = data;
-        } else if (data.response) {
-            resultsDiv.innerText = data.response;
-        } else if (data.output) {
-            resultsDiv.innerText = data.output;
-        } else if (data.message) {
-            resultsDiv.innerText = data.message;
-        } else if (data.text) {
-            resultsDiv.innerText = data.text;
-        } else {
-            resultsDiv.innerText = JSON.stringify(data, null, 2);
+        const answer = extractResponse(data);
+
+        if (!answer) {
+
+            console.log(
+                "Unrecognized n8n response:",
+                data
+            );
+
+            setDebug(
+                "n8n responded, but the response format was not recognized. Check the browser console for the full response."
+            );
+
+            throw new Error(
+                "n8n returned data, but no AI answer was found in the response."
+            );
         }
 
-    } catch (error) {
-        console.error("CommunityCare Error:", error);
-
         resultsDiv.innerHTML =
-            '<div style="color:#dc2626;">' +
-            '<strong>Connection failed.</strong><br><br>' +
-            error.message +
+            '<div class="success">' +
+            escapeHtml(answer) +
             '</div>';
-    }
 
-    searchButton.disabled = false;
-    searchButton.textContent = "Search";
+    } catch (error) {
+
+        clearTimeout(timeout);
+
+        console.error(
+            "CommunityCare Error:",
+            error
+        );
+
+        if (error.name === "AbortError") {
+
+            setError(
+                "The request took longer than 60 seconds. Your website is working, but the n8n workflow is taking too long to respond. Check the EjoChat API Request node."
+            );
+
+        } else {
+
+            setError(
+                error.message ||
+                "An unknown connection error occurred."
+            );
+        }
+
+    } finally {
+
+        searchButton.disabled = false;
+        searchButton.textContent = "Search";
+    }
 }
+
 </script>
+
 </body>
 </html>
-       
-
-
-
-
-
-            
-            
-        
-          
-            
-      
- 
-
-
-
-
-
-
   
-
+     
+            
          
+
+
+
+      
+
 
 
 
