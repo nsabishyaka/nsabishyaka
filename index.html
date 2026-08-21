@@ -262,323 +262,119 @@
         </p>
     </footer>
 
-
     <script>
-
-        /*
-         * ==========================================================
-         * N8N WEBHOOK CONFIGURATION
-         * ==========================================================
-         *
-         * IMPORTANT:
-         * Replace the URL below with your actual n8n
-         * PRODUCTION webhook URL.
-         *
-         * Example:
-         *
-         * const WEBHOOK_URL =
-         *     "https://your-n8n-domain.com/webhook/communitycare";
-         *
-         */
-
         const WEBHOOK_URL =
             "https://nsabishyaka.app.n8n.cloud/webhook/community-search";
-
-
-        /*
-         * ==========================================================
-         * GET HTML ELEMENTS
-         * ==========================================================
-         */
 
         const input = document.getElementById("userQuery");
         const resultsDiv = document.getElementById("results");
         const searchButton = document.getElementById("searchButton");
 
-
-        /*
-         * ==========================================================
-         * ENTER KEY SUPPORT
-         * ==========================================================
-         */
-
-        input.addEventListener("keydown", function (event) {
-
+        input.addEventListener("keydown", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 searchServices();
             }
-
         });
 
-
-        /*
-         * ==========================================================
-         * QUICK SEARCH
-         * ==========================================================
-         */
-
         function quickSearch(category) {
-
             input.value = category;
-
             searchServices();
-
         }
 
-
-        /*
-         * ==========================================================
-         * MAIN SEARCH FUNCTION
-         * ==========================================================
-         */
-
         async function searchServices() {
-
             const query = input.value.trim();
 
-
-            /*
-             * Check if the user entered something
-             */
-
             if (!query) {
-
                 resultsDiv.innerHTML =
                     '<span class="error">Please enter a search topic.</span>';
-
                 input.focus();
-
                 return;
             }
-
-
-            /*
-             * Check whether the webhook URL
-             * is still the placeholder.
-             */
-
-            if (
-                WEBHOOK_URL.includes("YOUR_WEBHOOK_ID_HERE")
-            ) {
-
-                resultsDiv.innerHTML =
-                    '<span class="error">' +
-                    'Please configure your n8n webhook URL first.' +
-                    '</span>';
-
-                console.error(
-                    "CommunityCare AI: The n8n webhook URL has not been configured."
-                );
-
-                return;
-            }
-
-
-            /*
-             * Show loading message
-             */
 
             resultsDiv.innerHTML =
-                '<span class="loading">' +
-                'Searching verified community services...' +
-                '</span>';
-
-
-            /*
-             * Disable button while searching
-             */
+                '<span class="loading">Searching verified community services...</span>';
 
             searchButton.disabled = true;
             searchButton.textContent = "Searching...";
 
-
             try {
-
-                /*
-                 * Send request to n8n
-                 */
-
                 const response = await fetch(WEBHOOK_URL, {
-
                     method: "POST",
-
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json, text/plain, */*"
                     },
-
                     body: JSON.stringify({
                         query: query
                     })
-
                 });
 
-
-                /*
-                 * Check HTTP response
-                 */
-
                 if (!response.ok) {
-
-                    throw new Error(
-                        `Server returned HTTP ${response.status}`
-                    );
-
+                    throw new Error(`HTTP ${response.status}`);
                 }
 
-
-                /*
-                 * Read response as text first.
-                 *
-                 * This prevents the application from crashing
-                 * if n8n returns plain text instead of JSON.
-                 */
-
                 const responseText = await response.text();
-
-
-                /*
-                 * Try to convert response to JSON
-                 */
 
                 let data;
 
                 try {
-
                     data = JSON.parse(responseText);
-
-                } catch (jsonError) {
-
-                    /*
-                     * Response was not JSON.
-                     * Treat it as plain text.
-                     */
-
+                } catch {
                     data = responseText;
-
                 }
-
-
-                /*
-                 * ==================================================
-                 * PROCESS RESPONSE
-                 * ==================================================
-                 */
-
 
                 if (typeof data === "string") {
-
-                    /*
-                     * n8n returned plain text
-                     */
-
                     resultsDiv.innerText = data;
-
-                }
-
-                else if (
-                    data &&
-                    typeof data.response === "string"
-                ) {
-
-                    /*
-                     * Expected format:
-                     *
-                     * {
-                     *     "response": "Your answer..."
-                     * }
-                     */
-
+                } else if (data && typeof data.response === "string") {
                     resultsDiv.innerText = data.response;
-
-                }
-
-                else if (
-                    data &&
-                    typeof data.output === "string"
-                ) {
-
-                    /*
-                     * Alternative n8n/AI format:
-                     *
-                     * {
-                     *     "output": "Your answer..."
-                     * }
-                     */
-
+                } else if (data && typeof data.output === "string") {
                     resultsDiv.innerText = data.output;
-
-                }
-
-                else if (
-                    data &&
-                    typeof data.message === "string"
-                ) {
-
-                    /*
-                     * Another possible response format
-                     */
-
+                } else if (data && typeof data.message === "string") {
                     resultsDiv.innerText = data.message;
-
-                }
-
-                else {
-
-                    /*
-                     * If the response has an unknown structure,
-                     * display it so you can debug the workflow.
-                     */
-
+                } else {
                     resultsDiv.innerText =
                         JSON.stringify(data, null, 2);
-
                 }
 
-
             } catch (error) {
-
-                /*
-                 * ==================================================
-                 * ERROR HANDLING
-                 * ==================================================
-                 */
-
-                console.error(
-                    "CommunityCare AI Webhook Error:",
-                    error
-                );
-
+                console.error("CommunityCare AI Error:", error);
 
                 resultsDiv.innerHTML =
                     '<span class="error">' +
-                    'Unable to connect to CommunityCare AI. ' +
-                    'Please check your internet connection and ' +
-                    'n8n webhook configuration, then try again.' +
+                    'Unable to connect to CommunityCare AI. Please check your n8n workflow and webhook configuration.' +
                     '</span>';
 
-            }
-
-            finally {
-
-                /*
-                 * Re-enable button
-                 */
-
+            } finally {
                 searchButton.disabled = false;
-
                 searchButton.textContent = "Search";
-
             }
-
         }
-
     </script>
 
 </body>
 </html>
+       
+
+
+
+
+
+            
+            
+        
+          
+            
       
+ 
+
+
+
+
+
+
+  
+
          
 
 
