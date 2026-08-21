@@ -162,47 +162,38 @@
     </footer>
 
     <script>
-        // REPLACE THE URL BELOW WITH YOUR EXACT N8N PRODUCTION WEBHOOK URL
-        const WEBHOOK_URL = 'https://nsabishyaka.app.n8n.cloud/webhook/community-search';
+       
+const WEBHOOK_URL = 'https://nsabishyaka.app.n8n.cloud/webhook/community-search';
 
-        function quickSearch(category) {
-            document.getElementById('userQuery').value = category;
-            searchServices();
-        }
+async function searchServices() {
+  const queryInput = document.getElementById('userQuery');
+  const responseContainer = document.getElementById('resultsContainer') || document.getElementById('responseContainer');
 
-        async function searchServices() {
-            const query = document.getElementById('userQuery').value.trim();
-            const resultsDiv = document.getElementById('results');
+  if (!queryInput || !queryInput.value.trim()) return;
 
-            if (!query) {
-                resultsDiv.innerHTML = '<span style="color:red;">Please enter a search topic.</span>';
-                return;
-            }
+  const query = queryInput.value.trim();
+  responseContainer.innerHTML = 'Searching...';
 
-            resultsDiv.innerHTML = '<span class="loading">Searching verified community services...</span>';
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatInput: query })
+    });
 
-            try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
-                });
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status}`);
+    }
 
-                const data = await response.json();
-
-                if (data && data.response) {
-                    resultsDiv.innerText = data.response;
-                } else if (typeof data === 'string') {
-                    resultsDiv.innerText = data;
-                } else {
-                    resultsDiv.innerText = JSON.stringify(data, null, 2);
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = '<span style="color:red;">Error connecting to CommunityCare AI. Please try again.</span>';
-                console.error(error);
-            }
-        }
-    </script>
+    const data = await res.json();
+    responseContainer.innerHTML = data.output || data.text || JSON.stringify(data);
+  } catch (err) {
+    console.error('Fetch error:', err);
+    responseContainer.innerHTML = '<p style="color:red;">Error connecting to CommunityCare AI. Please try again.</p>';
+  }
+}
+</script>
+           
 </body>
 </html>
 
