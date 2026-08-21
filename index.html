@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CommunityCare AI - Health & Civic Hub</title>
+
     <style>
         :root {
             --primary: #10b981;
@@ -11,6 +12,10 @@
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
             --text-color: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -29,11 +34,18 @@
             color: white;
             padding: 2rem 1rem;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        header h1 { margin: 0; font-size: 2.2rem; }
-        header p { margin-top: 0.5rem; opacity: 0.9; }
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+        }
+
+        header p {
+            margin-top: 0.5rem;
+            opacity: 0.9;
+        }
 
         .container {
             max-width: 800px;
@@ -41,14 +53,13 @@
             padding: 0 1rem;
             flex: 1;
             width: 100%;
-            box-sizing: border-box;
         }
 
         .search-card {
             background: var(--card-bg);
             padding: 1.5rem;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
         }
 
@@ -86,6 +97,11 @@
             background-color: var(--primary-dark);
         }
 
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
         .quick-tags {
             margin-top: 1rem;
             display: flex;
@@ -101,23 +117,31 @@
             font-size: 0.85rem;
             cursor: pointer;
             font-weight: 500;
+            transition: background 0.2s;
         }
 
-        .tag:hover { background: #c7d2fe; }
+        .tag:hover {
+            background: #c7d2fe;
+        }
 
         .results-card {
             background: var(--card-bg);
             padding: 1.5rem;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             min-height: 120px;
             white-space: pre-line;
             line-height: 1.6;
+            overflow-wrap: break-word;
         }
 
         .loading {
             color: #6b7280;
             font-style: italic;
+        }
+
+        .error {
+            color: #dc2626;
         }
 
         footer {
@@ -128,8 +152,28 @@
             border-top: 1px solid #e5e7eb;
             background: white;
         }
+
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-card,
+            .results-card {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
+
 <body>
 
     <header>
@@ -137,66 +181,415 @@
         <p>Your Civic Engagement & Local Health Assistant</p>
     </header>
 
-    <div class="container">
+    <main class="container">
+
         <div class="search-card">
-            <label for="userQuery" style="display:block; font-weight:bold; margin-bottom: 0.5rem;">How can we help you today?</label>
+
+            <label
+                for="userQuery"
+                style="display: block; font-weight: bold; margin-bottom: 0.5rem;"
+            >
+                How can we help you today?
+            </label>
+
             <div class="input-group">
-                <input type="text" id="userQuery" placeholder="e.g., I need food assistance or health centers nearby...">
-                <button onclick="searchServices()">Search</button>
+
+                <input
+                    type="text"
+                    id="userQuery"
+                    placeholder="e.g., I need food assistance or health centers nearby..."
+                    autocomplete="off"
+                >
+
+                <button
+                    type="button"
+                    id="searchButton"
+                    onclick="searchServices()"
+                >
+                    Search
+                </button>
+
             </div>
+
             <div class="quick-tags">
-                <span class="tag" onclick="quickSearch('Health')">🏥 Health</span>
-                <span class="tag" onclick="quickSearch('Food Aid')">🍲 Food Aid</span>
-                <span class="tag" onclick="quickSearch('Mental Health')">🧠 Mental Health</span>
-                <span class="tag" onclick="quickSearch('Shelter')">🏠 Shelter</span>
+
+                <span
+                    class="tag"
+                    onclick="quickSearch('Health')"
+                >
+                    🏥 Health
+                </span>
+
+                <span
+                    class="tag"
+                    onclick="quickSearch('Food Aid')"
+                >
+                    🍲 Food Aid
+                </span>
+
+                <span
+                    class="tag"
+                    onclick="quickSearch('Mental Health')"
+                >
+                    🧠 Mental Health
+                </span>
+
+                <span
+                    class="tag"
+                    onclick="quickSearch('Shelter')"
+                >
+                    🏠 Shelter
+                </span>
+
             </div>
+
         </div>
 
-        <div class="results-card" id="results">
+        <div
+            class="results-card"
+            id="results"
+            aria-live="polite"
+        >
             <em>Search results and AI assistance will appear here...</em>
         </div>
-    </div>
+
+    </main>
 
     <footer>
-        <p>&copy; 2026 CommunityCare AI | Early Warning & Civic Support System</p>
+        <p>
+            &copy; 2026 CommunityCare AI |
+            Early Warning & Civic Support System
+        </p>
     </footer>
 
+
     <script>
-       
-const WEBHOOK_URL = 'https://nsabishyaka.app.n8n.cloud/webhook/community-search';
 
-async function searchServices() {
-  const queryInput = document.getElementById('userQuery');
-  const responseContainer = document.getElementById('resultsContainer') || document.getElementById('responseContainer');
+        /*
+         * ==========================================================
+         * N8N WEBHOOK CONFIGURATION
+         * ==========================================================
+         *
+         * IMPORTANT:
+         * Replace the URL below with your actual n8n
+         * PRODUCTION webhook URL.
+         *
+         * Example:
+         *
+         * const WEBHOOK_URL =
+         *     "https://your-n8n-domain.com/webhook/communitycare";
+         *
+         */
 
-  if (!queryInput || !queryInput.value.trim()) return;
+        const WEBHOOK_URL =
+            "https://nsabishyaka.app.n8n.cloud/webhook/YOUR_WEBHOOK_ID_HERE";
 
-  const query = queryInput.value.trim();
-  responseContainer.innerHTML = 'Searching...';
 
-  try {
-    const res = await fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chatInput: query })
-    });
+        /*
+         * ==========================================================
+         * GET HTML ELEMENTS
+         * ==========================================================
+         */
 
-    if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`);
-    }
+        const input = document.getElementById("userQuery");
+        const resultsDiv = document.getElementById("results");
+        const searchButton = document.getElementById("searchButton");
 
-    const data = await res.json();
-    responseContainer.innerHTML = data.output || data.text || JSON.stringify(data);
-  } catch (err) {
-    console.error('Fetch error:', err);
-    responseContainer.innerHTML = '<p style="color:red;">Error connecting to CommunityCare AI. Please try again.</p>';
-  }
-}
-</script>
-           
+
+        /*
+         * ==========================================================
+         * ENTER KEY SUPPORT
+         * ==========================================================
+         */
+
+        input.addEventListener("keydown", function (event) {
+
+            if (event.key === "Enter") {
+                event.preventDefault();
+                searchServices();
+            }
+
+        });
+
+
+        /*
+         * ==========================================================
+         * QUICK SEARCH
+         * ==========================================================
+         */
+
+        function quickSearch(category) {
+
+            input.value = category;
+
+            searchServices();
+
+        }
+
+
+        /*
+         * ==========================================================
+         * MAIN SEARCH FUNCTION
+         * ==========================================================
+         */
+
+        async function searchServices() {
+
+            const query = input.value.trim();
+
+
+            /*
+             * Check if the user entered something
+             */
+
+            if (!query) {
+
+                resultsDiv.innerHTML =
+                    '<span class="error">Please enter a search topic.</span>';
+
+                input.focus();
+
+                return;
+            }
+
+
+            /*
+             * Check whether the webhook URL
+             * is still the placeholder.
+             */
+
+            if (
+                WEBHOOK_URL.includes("YOUR_WEBHOOK_ID_HERE")
+            ) {
+
+                resultsDiv.innerHTML =
+                    '<span class="error">' +
+                    'Please configure your n8n webhook URL first.' +
+                    '</span>';
+
+                console.error(
+                    "CommunityCare AI: The n8n webhook URL has not been configured."
+                );
+
+                return;
+            }
+
+
+            /*
+             * Show loading message
+             */
+
+            resultsDiv.innerHTML =
+                '<span class="loading">' +
+                'Searching verified community services...' +
+                '</span>';
+
+
+            /*
+             * Disable button while searching
+             */
+
+            searchButton.disabled = true;
+            searchButton.textContent = "Searching...";
+
+
+            try {
+
+                /*
+                 * Send request to n8n
+                 */
+
+                const response = await fetch(WEBHOOK_URL, {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json, text/plain, */*"
+                    },
+
+                    body: JSON.stringify({
+                        query: query
+                    })
+
+                });
+
+
+                /*
+                 * Check HTTP response
+                 */
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `Server returned HTTP ${response.status}`
+                    );
+
+                }
+
+
+                /*
+                 * Read response as text first.
+                 *
+                 * This prevents the application from crashing
+                 * if n8n returns plain text instead of JSON.
+                 */
+
+                const responseText = await response.text();
+
+
+                /*
+                 * Try to convert response to JSON
+                 */
+
+                let data;
+
+                try {
+
+                    data = JSON.parse(responseText);
+
+                } catch (jsonError) {
+
+                    /*
+                     * Response was not JSON.
+                     * Treat it as plain text.
+                     */
+
+                    data = responseText;
+
+                }
+
+
+                /*
+                 * ==================================================
+                 * PROCESS RESPONSE
+                 * ==================================================
+                 */
+
+
+                if (typeof data === "string") {
+
+                    /*
+                     * n8n returned plain text
+                     */
+
+                    resultsDiv.innerText = data;
+
+                }
+
+                else if (
+                    data &&
+                    typeof data.response === "string"
+                ) {
+
+                    /*
+                     * Expected format:
+                     *
+                     * {
+                     *     "response": "Your answer..."
+                     * }
+                     */
+
+                    resultsDiv.innerText = data.response;
+
+                }
+
+                else if (
+                    data &&
+                    typeof data.output === "string"
+                ) {
+
+                    /*
+                     * Alternative n8n/AI format:
+                     *
+                     * {
+                     *     "output": "Your answer..."
+                     * }
+                     */
+
+                    resultsDiv.innerText = data.output;
+
+                }
+
+                else if (
+                    data &&
+                    typeof data.message === "string"
+                ) {
+
+                    /*
+                     * Another possible response format
+                     */
+
+                    resultsDiv.innerText = data.message;
+
+                }
+
+                else {
+
+                    /*
+                     * If the response has an unknown structure,
+                     * display it so you can debug the workflow.
+                     */
+
+                    resultsDiv.innerText =
+                        JSON.stringify(data, null, 2);
+
+                }
+
+
+            } catch (error) {
+
+                /*
+                 * ==================================================
+                 * ERROR HANDLING
+                 * ==================================================
+                 */
+
+                console.error(
+                    "CommunityCare AI Webhook Error:",
+                    error
+                );
+
+
+                resultsDiv.innerHTML =
+                    '<span class="error">' +
+                    'Unable to connect to CommunityCare AI. ' +
+                    'Please check your internet connection and ' +
+                    'n8n webhook configuration, then try again.' +
+                    '</span>';
+
+            }
+
+            finally {
+
+                /*
+                 * Re-enable button
+                 */
+
+                searchButton.disabled = false;
+
+                searchButton.textContent = "Search";
+
+            }
+
+        }
+
+    </script>
+
 </body>
 </html>
+      
+         
 
- 
 
- 
+
+
+
+      
+
+
+
+
+
+
+
